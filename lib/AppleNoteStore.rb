@@ -6,10 +6,10 @@ require_relative 'AppleNotesAccount.rb'
 require_relative 'AppleNotesFolder.rb'
 
 ##
-# This class represents an Apple NoteStore file. It tries to handle the hard work of taking 
-# any Apple Notes database, determining the proper version of it, and tailoring queries to 
+# This class represents an Apple NoteStore file. It tries to handle the hard work of taking
+# any Apple Notes database, determining the proper version of it, and tailoring queries to
 # that version.
-class AppleNoteStore 
+class AppleNoteStore
 
   attr_accessor :folders,
                 :accounts,
@@ -30,10 +30,10 @@ class AppleNoteStore
 
   ##
   # Creates a new AppleNoteStore. Expects a FilePath +file_path+ to the NoteStore.sqlite
-  # database itself. Uses that to create a SQLite3::Database object to query into it. Immediately 
-  # creates an Array to hold the +notes+, an Array to hold the +folders+ and an Array to hold 
-  # the +accounts+. Then it calls +rip_accounts+ and +rip_folders+ to populate them. Also 
-  # expects an AppleBackup +backup+ object to interact with finding files of interest and an 
+  # database itself. Uses that to create a SQLite3::Database object to query into it. Immediately
+  # creates an Array to hold the +notes+, an Array to hold the +folders+ and an Array to hold
+  # the +accounts+. Then it calls +rip_accounts+ and +rip_folders+ to populate them. Also
+  # expects an AppleBackup +backup+ object to interact with finding files of interest and an
   # Integer +version+ to know what type it is.
   def initialize(file_path, backup, version)
     @file_path = file_path
@@ -50,14 +50,14 @@ class AppleNoteStore
   end
 
   ##
-  # This method does a set of database calls to try to guess the version of Apple Notes we are ripping. 
+  # This method does a set of database calls to try to guess the version of Apple Notes we are ripping.
   # It tries to structure the checks to bail out as each specific version is recognized and then assume we are not it.
-  # Helpful changelogs: 
+  # Helpful changelogs:
   # 14 (): ??
-  # 13 (https://www.apple.com/ios/ios-13/): Added checklists and shared folders, better search, and gallery 
-  # 12 (https://web.archive.org/web/20190909033052/https://www.apple.com/ios/ios-12/): Nothing major 
-  # 11 (https://web.archive.org/web/20180828212252/https://www.apple.com/ios/ios-11/): Added document scanner, added tables 
-  # 10 (https://web.archive.org/web/20170912052423/https://www.apple.com/ios/ios-10): Added collaboration features 
+  # 13 (https://www.apple.com/ios/ios-13/): Added checklists and shared folders, better search, and gallery
+  # 12 (https://web.archive.org/web/20190909033052/https://www.apple.com/ios/ios-12/): Nothing major
+  # 11 (https://web.archive.org/web/20180828212252/https://www.apple.com/ios/ios-11/): Added document scanner, added tables
+  # 10 (https://web.archive.org/web/20170912052423/https://www.apple.com/ios/ios-10): Added collaboration features
   # 9 (https://web.archive.org/web/20160906075542/https://www.apple.com/ios/): Added sketches, ability to insert images inline, websites, and maps. Added iCLoud support
   # 8 (https://web.archive.org/web/20150905181128/http://www.apple.com/ios/): Added rich text support, and adding images
   def self.guess_ios_version(database_to_check)
@@ -96,7 +96,7 @@ class AppleNoteStore
   end
 
   ##
-  # This class method hashes the table names within a database to compare them. It 
+  # This class method hashes the table names within a database to compare them. It
   # expects a Pathname pointing to the database file.
   def self.get_database_tables(database_to_check)
     to_return = Array.new
@@ -123,7 +123,7 @@ class AppleNoteStore
 
     # Use a regular expression to pull out the column definitions
     table_column_regex.match(sql) do |match|
-  
+
       # Split the column definitions by commas and loop over them
       match[1].split(',').each do |column|
 
@@ -139,8 +139,8 @@ class AppleNoteStore
   end
 
   ##
-  # This class method returns an MD5 hash of the concatenation of database columsn and types. It expects 
-  # a Pathname +database_to_check+ pointing to the location on disk of the database to check. It also expects 
+  # This class method returns an MD5 hash of the concatenation of database columsn and types. It expects
+  # a Pathname +database_to_check+ pointing to the location on disk of the database to check. It also expects
   # a String +table+, representing the table name to look up. It is useful to fingerprint a given table version.
   def self.get_database_table_columns(database_to_check, table)
     to_return = Array.new
@@ -158,7 +158,7 @@ class AppleNoteStore
     return to_return
   end
 
-  ## 
+  ##
   # This method nicely closes the database handle.
   def close
     @database.close if @database
@@ -189,7 +189,7 @@ class AppleNoteStore
   end
 
   ##
-  # This method returns an Array of rows to build the +accounts+ 
+  # This method returns an Array of rows to build the +accounts+
   # CSV object.
   def get_account_csv
     to_return = [AppleNotesAccount.to_csv_headers]
@@ -200,7 +200,7 @@ class AppleNoteStore
   end
 
   ##
-  # This method adds the ZPLAINTEXT column to ZICNOTEDATA 
+  # This method adds the ZPLAINTEXT column to ZICNOTEDATA
   # and then populates it with each note's plaintext.
   def add_plain_text_to_database
 
@@ -217,22 +217,22 @@ class AppleNoteStore
     @notes.each do |key, note|
 
       # Update the database to include the plaintext
-      @database.execute("UPDATE ZICNOTEDATA " + 
-                        "SET ZPLAINTEXT=?, ZDECOMPRESSEDDATA=? " + 
+      @database.execute("UPDATE ZICNOTEDATA " +
+                        "SET ZPLAINTEXT=?, ZDECOMPRESSEDDATA=? " +
                         "WHERE Z_PK=?",
                         note.plaintext, note.decompressed_data, note.primary_key) if note.plaintext
     end
   end
 
   ##
-  # This method returns an Array of rows to build the 
+  # This method returns an Array of rows to build the
   # CSV object holding all AppleNotesEmbeddedObject instances in its +notes+.
   def get_embedded_object_csv
     to_return = [AppleNotesEmbeddedObject.to_csv_headers]
 
     # Loop over each AppleNote
     @notes.each do |key, note|
-  
+
       # Loop over eac AppleNotesEmbeddedObject
       note.embedded_objects.each do |embedded_object|
 
@@ -246,7 +246,7 @@ class AppleNoteStore
           embedded_object_csv.each do |embedded_array|
             to_return.push(embedded_array)
           end
-        else 
+        else
           to_return.push(embedded_object_csv)
         end
       end
@@ -255,7 +255,7 @@ class AppleNoteStore
   end
 
   ##
-  # This method returns an Array of rows to build the +folders+ 
+  # This method returns an Array of rows to build the +folders+
   # CSV object.
   def get_folder_csv
     to_return = [AppleNotesFolder.to_csv_headers]
@@ -266,7 +266,7 @@ class AppleNoteStore
   end
 
   ##
-  # This method returns an Array of rows to build the +cloudkit_participants+ 
+  # This method returns an Array of rows to build the +cloudkit_participants+
   # CSV object.
   def get_cloudkit_participants_csv
     to_return = [AppleCloudKitShareParticipant.to_csv_headers]
@@ -277,7 +277,7 @@ class AppleNoteStore
   end
 
   ##
-  # This method returns an Array of rows to build the +notes+ 
+  # This method returns an Array of rows to build the +notes+
   # CSV object.
   def get_note_csv
     to_return = [AppleNote.to_csv_headers]
@@ -288,36 +288,36 @@ class AppleNoteStore
   end
 
   ##
-  # This method looks up an AppleNotesAccount based on the given +account_id+. 
+  # This method looks up an AppleNotesAccount based on the given +account_id+.
   # ID should be an Integer that represents the ZICCLOUDSYNCINGOBJECT.Z_PK of the account.
   def get_account(account_id)
     @accounts[account_id]
   end
 
   ##
-  # This method looks up an AppleNotesFolder based on the given +folder_id+. 
+  # This method looks up an AppleNotesFolder based on the given +folder_id+.
   # ID should be an Integer that represents the ZICCLOUDSYNCINGOBJECT.Z_PK of the folder.
   def get_folder(folder_id)
     @folders[folder_id]
   end
 
   ##
-  # This method looks up an AppleNote based on the given +note_id+. 
+  # This method looks up an AppleNote based on the given +note_id+.
   # ID should be an Integer that represents the ZICNOTEDATA.ZNOTE of the note.
   def get_note(note_id)
     @notes[note_id]
   end
 
   ##
-  # This function identifies all AppleNotesAccount potential 
+  # This function identifies all AppleNotesAccount potential
   # objects in ZICCLOUDSYNCINGOBJECTS and calls +rip_account+ on each.
   def rip_accounts()
     if @version >= IOS_VERSION_9
       @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK " +
-                        "FROM ZICCLOUDSYNCINGOBJECT " + 
+                        "FROM ZICCLOUDSYNCINGOBJECT " +
                         "WHERE ZICCLOUDSYNCINGOBJECT.ZNAME IS NOT NULL") do |row|
         rip_account(row["Z_PK"])
-      end 
+      end
     end
 
     if @version == IOS_LEGACY_VERSION
@@ -333,11 +333,11 @@ class AppleNoteStore
   end
 
   ##
-  # This function takes a specific AppleNotesAccount potential 
+  # This function takes a specific AppleNotesAccount potential
   # object in ZICCLOUDSYNCINGOBJECTS, identified by Integer +account_id+, and pulls the needed information to create the object.
   # If encryption information is present, it adds it with AppleNotesAccount.add_crypto_variables.
   def rip_account(account_id)
-  
+
     @logger.debug("Rip Account: Calling rip_account on Account ID #{account_id}")
 
     # Set the ZSERVERRECORD column to look at
@@ -351,18 +351,18 @@ class AppleNoteStore
     @logger.debug("Rip Account: Using server_record_column of #{server_record_column}")
 
     # Set the query
-    query_string = "SELECT ZICCLOUDSYNCINGOBJECT.ZNAME, ZICCLOUDSYNCINGOBJECT.Z_PK, " + 
-                   "ZICCLOUDSYNCINGOBJECT.#{server_record_column}, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
-                   "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, " + 
+    query_string = "SELECT ZICCLOUDSYNCINGOBJECT.ZNAME, ZICCLOUDSYNCINGOBJECT.Z_PK, " +
+                   "ZICCLOUDSYNCINGOBJECT.#{server_record_column}, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
+                   "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, " +
                    "ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, ZICCLOUDSYNCINGOBJECT.#{server_share_column} " +
-                   "FROM ZICCLOUDSYNCINGOBJECT " + 
+                   "FROM ZICCLOUDSYNCINGOBJECT " +
                    "WHERE ZICCLOUDSYNCINGOBJECT.Z_PK=?"
-    
+
     # Change the query for legacy IOS
     if @version == IOS_LEGACY_VERSION
-      query_string = "SELECT ZACCOUNT.ZNAME, ZACCOUNT.Z_PK, " + 
-                     "ZACCOUNT.ZACCOUNTIDENTIFIER as ZIDENTIFIER " + 
-                     "FROM ZACCOUNT " + 
+      query_string = "SELECT ZACCOUNT.ZNAME, ZACCOUNT.Z_PK, " +
+                     "ZACCOUNT.ZACCOUNTIDENTIFIER as ZIDENTIFIER " +
+                     "FROM ZACCOUNT " +
                      "WHERE ZACCOUNT.Z_PK=?"
     end
 
@@ -370,7 +370,7 @@ class AppleNoteStore
 
     # Run the query
     @database.execute(query_string, account_id) do |row|
-  
+
       # Create account object
       tmp_account = AppleNotesAccount.new(row["Z_PK"],
                                           row["ZNAME"],
@@ -379,7 +379,7 @@ class AppleNoteStore
       # Add server-side data, if relevant
       tmp_account.add_cloudkit_server_record_data(row[server_record_column]) if row[server_record_column]
 
-      if(row[server_share_column]) 
+      if(row[server_share_column])
         tmp_account.add_cloudkit_sharing_data(row[server_share_column])
 
         # Add any share participants to our overall list
@@ -398,16 +398,16 @@ class AppleNoteStore
       @logger.debug("Rip Account: Created account #{tmp_account.name}")
 
       @accounts[account_id] = tmp_account
-    end 
+    end
   end
 
   ##
-  # This function identifies all AppleNotesFolder potential 
+  # This function identifies all AppleNotesFolder potential
   # objects in ZICCLOUDSYNCINGOBJECTS and calls +rip_folder+ on each.
   def rip_folders()
     if @version >= IOS_VERSION_9
-      @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK " + 
-                        "FROM ZICCLOUDSYNCINGOBJECT " + 
+      @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK " +
+                        "FROM ZICCLOUDSYNCINGOBJECT " +
                         "WHERE ZICCLOUDSYNCINGOBJECT.ZTITLE2 IS NOT NULL") do |row|
         rip_folder(row["Z_PK"])
       end
@@ -427,8 +427,8 @@ class AppleNoteStore
   end
 
   ##
-  # This function takes a specific AppleNotesFolder potential 
-  # object in ZICCLOUDSYNCINGOBJECTS, identified by Integer +folder_id+, and pulls the needed information to create the object. 
+  # This function takes a specific AppleNotesFolder potential
+  # object in ZICCLOUDSYNCINGOBJECTS, identified by Integer +folder_id+, and pulls the needed information to create the object.
   # This used to use ZICCLOUDSYNCINGOBJECT.ZACCOUNT4, but that value also appears to be duplicated in ZOWNER which goes back further.
   def rip_folder(folder_id)
 
@@ -441,17 +441,17 @@ class AppleNoteStore
     # Set the ZSERVERSHARE column to look at
     server_share_column = "ZSERVERSHARE"
     server_share_column = server_share_column + "DATA" if @version >= 12 # In iOS 11 this was ZSERVERRECORD, in 12 and later it became ZSERVERRECORDDATA
-  
-    query_string = "SELECT ZICCLOUDSYNCINGOBJECT.ZTITLE2, ZICCLOUDSYNCINGOBJECT.ZOWNER, " + 
+
+    query_string = "SELECT ZICCLOUDSYNCINGOBJECT.ZTITLE2, ZICCLOUDSYNCINGOBJECT.ZOWNER, " +
                    "ZICCLOUDSYNCINGOBJECT.#{server_record_column}, ZICCLOUDSYNCINGOBJECT.#{server_share_column}, " +
                    "ZICCLOUDSYNCINGOBJECT.Z_PK " +
-                   "FROM ZICCLOUDSYNCINGOBJECT " + 
+                   "FROM ZICCLOUDSYNCINGOBJECT " +
                    "WHERE ZICCLOUDSYNCINGOBJECT.Z_PK=?"
 
     #Change things up for the legacy version
     if @version == IOS_LEGACY_VERSION
       query_string = "SELECT ZSTORE.Z_PK, ZSTORE.ZNAME as ZTITLE2, " +
-                     "ZSTORE.ZACCOUNT as ZOWNER " + 
+                     "ZSTORE.ZACCOUNT as ZOWNER " +
                      "FROM ZSTORE " +
                      "WHERE ZSTORE.Z_PK=?"
     end
@@ -464,7 +464,7 @@ class AppleNoteStore
       # Add server-side data, if relevant
       tmp_folder.add_cloudkit_server_record_data(row[server_record_column]) if row[server_record_column]
 
-      if(row[server_share_column]) 
+      if(row[server_share_column])
         tmp_folder.add_cloudkit_sharing_data(row[server_share_column])
 
         # Add any share participants to our overall list
@@ -476,11 +476,11 @@ class AppleNoteStore
       @logger.debug("Rip Folder: Created folder #{tmp_folder.name}")
 
       @folders[folder_id] = tmp_folder
-    end 
+    end
   end
 
   ##
-  # This function identifies all AppleNote potential 
+  # This function identifies all AppleNote potential
   # objects in ZICNOTEDATA and calls +rip_note+ on each.
   def rip_notes()
     if @version >= IOS_VERSION_9
@@ -497,13 +497,12 @@ class AppleNoteStore
   end
 
   ##
-  # This function takes a specific AppleNotesAccount potential 
-  # object in ZICCLOUDSYNCINGOBJECTS and ZICNOTEDATA, identified by Integer +account_id+, 
-  # and pulls the needed information to create the object. An AppleNote remembers the AppleNotesFolder 
-  # and AppleNotesAccount it is part of. If encryption information is present, it adds 
+  # This function takes a specific AppleNotesAccount potential
+  # object in ZICCLOUDSYNCINGOBJECTS and ZICNOTEDATA, identified by Integer +account_id+,
+  # and pulls the needed information to create the object. An AppleNote remembers the AppleNotesFolder
+  # and AppleNotesAccount it is part of. If encryption information is present, it adds
   # it with AppleNotesAccount.add_crypto_variables.
   def rip_note(note_id)
-
     @logger.debug("Rip Note: Ripping note from Note ID #{note_id}")
 
     # Set the ZSERVERRECORD column to look at
@@ -514,17 +513,17 @@ class AppleNoteStore
     server_share_column = "ZSERVERSHARE"
     server_share_column = server_share_column + "DATA" if @version >= 12 # In iOS 11 this was ZSERVERRECORD, in 12 and later it became ZSERVERRECORDDATA
 
-    query_string = "SELECT ZICNOTEDATA.Z_PK, ZICNOTEDATA.ZNOTE, " + 
-                   "ZICNOTEDATA.ZCRYPTOINITIALIZATIONVECTOR, ZICNOTEDATA.ZCRYPTOTAG, " + 
-                   "ZICNOTEDATA.ZDATA, ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, " + 
-                   "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
+    query_string = "SELECT ZICNOTEDATA.Z_PK, ZICNOTEDATA.ZNOTE, " +
+                   "ZICNOTEDATA.ZCRYPTOINITIALIZATIONVECTOR, ZICNOTEDATA.ZCRYPTOTAG, " +
+                   "ZICNOTEDATA.ZDATA, ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, " +
+                   "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
                    "ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, ZICCLOUDSYNCINGOBJECT.ZISPASSWORDPROTECTED, " +
                    "ZICCLOUDSYNCINGOBJECT.ZMODIFICATIONDATE1, ZICCLOUDSYNCINGOBJECT.ZCREATIONDATE1, " +
                    "ZICCLOUDSYNCINGOBJECT.ZTITLE1, ZICCLOUDSYNCINGOBJECT.ZACCOUNT3, " +
-                   "ZICCLOUDSYNCINGOBJECT.ZACCOUNT2, ZICCLOUDSYNCINGOBJECT.ZFOLDER, " + 
-                   "ZICCLOUDSYNCINGOBJECT.#{server_record_column}, ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD, " + 
-                   "ZICCLOUDSYNCINGOBJECT.#{server_share_column} " + 
-                   "FROM ZICNOTEDATA, ZICCLOUDSYNCINGOBJECT " + 
+                   "ZICCLOUDSYNCINGOBJECT.ZACCOUNT2, ZICCLOUDSYNCINGOBJECT.ZFOLDER, " +
+                   "ZICCLOUDSYNCINGOBJECT.#{server_record_column}, ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD, " +
+                   "ZICCLOUDSYNCINGOBJECT.#{server_share_column} " +
+                   "FROM ZICNOTEDATA, ZICCLOUDSYNCINGOBJECT " +
                    "WHERE ZICNOTEDATA.ZNOTE=? AND ZICCLOUDSYNCINGOBJECT.Z_PK=ZICNOTEDATA.ZNOTE"
     folder_field = "ZFOLDER"
     account_field = "ZACCOUNT3"
@@ -537,16 +536,16 @@ class AppleNoteStore
 
     # In version 11, what is now in ZACCOUNT3 was in ZACCOUNT2 and the ZFOLDER field was in a completely separate table
     if @version == IOS_VERSION_11
-      query_string = "SELECT ZICNOTEDATA.Z_PK, ZICNOTEDATA.ZNOTE, " + 
-                     "ZICNOTEDATA.ZCRYPTOINITIALIZATIONVECTOR, ZICNOTEDATA.ZCRYPTOTAG, " + 
-                     "ZICNOTEDATA.ZDATA, ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, " + 
-                     "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
+      query_string = "SELECT ZICNOTEDATA.Z_PK, ZICNOTEDATA.ZNOTE, " +
+                     "ZICNOTEDATA.ZCRYPTOINITIALIZATIONVECTOR, ZICNOTEDATA.ZCRYPTOTAG, " +
+                     "ZICNOTEDATA.ZDATA, ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, " +
+                     "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, ZICCLOUDSYNCINGOBJECT.ZISPASSWORDPROTECTED, " +
                      "ZICCLOUDSYNCINGOBJECT.ZMODIFICATIONDATE1, ZICCLOUDSYNCINGOBJECT.ZCREATIONDATE1, " +
                      "ZICCLOUDSYNCINGOBJECT.ZTITLE1, ZICCLOUDSYNCINGOBJECT.ZACCOUNT2, " +
-                     "Z_11NOTES.Z_11FOLDERS, ZICCLOUDSYNCINGOBJECT.#{server_record_column}, " + 
-                     "ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD, ZICCLOUDSYNCINGOBJECT.#{server_share_column} " + 
-                     "FROM ZICNOTEDATA, ZICCLOUDSYNCINGOBJECT, Z_11NOTES " + 
+                     "Z_11NOTES.Z_11FOLDERS, ZICCLOUDSYNCINGOBJECT.#{server_record_column}, " +
+                     "ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD, ZICCLOUDSYNCINGOBJECT.#{server_share_column} " +
+                     "FROM ZICNOTEDATA, ZICCLOUDSYNCINGOBJECT, Z_11NOTES " +
                      "WHERE ZICNOTEDATA.ZNOTE=? AND ZICCLOUDSYNCINGOBJECT.Z_PK=ZICNOTEDATA.ZNOTE AND Z_11NOTES.Z_8NOTES=ZICNOTEDATA.ZNOTE"
       folder_field = "Z_11FOLDERS"
       account_field = "ZACCOUNT2"
@@ -554,8 +553,8 @@ class AppleNoteStore
 
     # In the legecy version, everything is different
     if @version == IOS_LEGACY_VERSION
-      query_string = "SELECT ZNOTE.Z_PK, ZNOTE.ZCREATIONDATE as ZCREATIONDATE1, " + 
-                     "ZNOTE.ZMODIFICATIONDATE as ZMODIFICATIONDATE1, ZNOTE.ZTITLE as ZTITLE1, " + 
+      query_string = "SELECT ZNOTE.Z_PK, ZNOTE.ZCREATIONDATE as ZCREATIONDATE1, " +
+                     "ZNOTE.ZMODIFICATIONDATE as ZMODIFICATIONDATE1, ZNOTE.ZTITLE as ZTITLE1, " +
                      "ZNOTEBODY.ZCONTENT as ZDATA, ZSTORE.Z_PK as ZFOLDER, ZSTORE.ZACCOUNT " +
                      "FROM ZNOTE, ZNOTEBODY, ZSTORE " +
                      "WHERE ZNOTE.Z_PK=? AND ZNOTEBODY.Z_PK=ZNOTE.ZBODY AND ZSTORE.Z_PK=ZNOTE.ZSTORE"
@@ -563,9 +562,9 @@ class AppleNoteStore
       account_field = "ZACCOUNT"
       note_id_field = "Z_PK"
     end
-  
-    # Uncomment these lines if we ever think there is weirdness with using the wrong fields for the right version 
-    #@logger.debug("Rip Note: Query string is #{query_string}") 
+
+    # Uncomment these lines if we ever think there is weirdness with using the wrong fields for the right version
+    #@logger.debug("Rip Note: Query string is #{query_string}")
     #@logger.debug("Rip Note: account field is #{account_field}")
     #@logger.debug("Rip Note: folder field is #{folder_field}")
 
@@ -580,11 +579,11 @@ class AppleNoteStore
       tmp_folder = get_folder(tmp_folder_id)
       @logger.error("Rip Note: Somehow could not find account!") if !tmp_account
       @logger.error("Rip Note: Somehow could not find folder!") if !tmp_folder
-      tmp_note = AppleNote.new(row["Z_PK"], 
+      tmp_note = AppleNote.new(row["Z_PK"],
                                row[note_id_field],
-                               row["ZTITLE1"], 
-                               row["ZDATA"], 
-                               row["ZCREATIONDATE1"], 
+                               row["ZTITLE1"],
+                               row["ZDATA"],
+                               row["ZCREATIONDATE1"],
                                row["ZMODIFICATIONDATE1"],
                                tmp_account,
                                tmp_folder,
@@ -595,7 +594,7 @@ class AppleNoteStore
       # Add server-side data, if relevant
       tmp_note.add_cloudkit_server_record_data(row[server_record_column]) if row[server_record_column]
 
-      if(row[server_share_column]) 
+      if(row[server_share_column])
         tmp_note.add_cloudkit_sharing_data(row[server_share_column])
 
         # Add any share participants to our overall list
@@ -629,8 +628,8 @@ class AppleNoteStore
           crypto_key = ns_values[ns_keys.index("CryptoWrappedKey")]
         end
 
-        tmp_note.add_cryptographic_settings(crypto_iv, 
-                                            crypto_tag, 
+        tmp_note.add_cryptographic_settings(crypto_iv,
+                                            crypto_tag,
                                             crypto_salt,
                                             crypto_iterations,
                                             crypto_verifier,
@@ -643,7 +642,7 @@ class AppleNoteStore
           @logger.debug("Apple Note Store: Note #{tmp_note.note_id} could not be decrypted with our passwords.")
         end
       end
-      
+
       # Only add the note if we have both a folder and account for it, otherwise things blow up
       if tmp_account and tmp_folder
         @notes[tmp_note.note_id] = tmp_note
@@ -697,7 +696,7 @@ class AppleNoteStore
     @folders.each do |folder_id, folder|
       html += folder.generate_html + "\n"
     end
-  
+
     html += "<div class='note-cards'>\n"
     @notes.each do |note_id, note|
       html += "<div class='note-card'>\n"

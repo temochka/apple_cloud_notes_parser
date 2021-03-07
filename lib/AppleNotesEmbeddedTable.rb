@@ -5,7 +5,7 @@ require_relative 'AppleNoteStore.rb'
 
 ##
 # This class represents a com.apple.notes.table object embedded
-# in an AppleNote. These tables are simple formatting that don't allow for 
+# in an AppleNote. These tables are simple formatting that don't allow for
 # any additional formatting or embedded objects in them, as of iOS 13.
 class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
 
@@ -18,10 +18,10 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   # Constant to more obviously represent right to left tables
   RIGHT_TO_LEFT_DIRECTION = "CRTableColumnDirectionRightToLeft"
 
-  ## 
-  # Creates a new AppleNotesEmbeddedTable object. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
-  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, and AppleNote +note+ object representing the parent AppleNote. 
+  ##
+  # Creates a new AppleNotesEmbeddedTable object.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
+  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, and AppleNote +note+ object representing the parent AppleNote.
   def initialize(primary_key, uuid, uti, note)
     # Set this objects's variables
     super(primary_key, uuid, uti, note)
@@ -50,8 +50,8 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method just returns a readable String for the object. 
-  # Adds to the default to include the text of the table, with each 
+  # This method just returns a readable String for the object.
+  # Adds to the default to include the text of the table, with each
   # row on a new line.
   def to_s
     string_to_add = " with cells: "
@@ -69,8 +69,8 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method initializes the reconstructed table. It loops over the +total_columns+ 
-  # and +total_columns+ that were assessed for the table and builds a two dimensional array of 
+  # This method initializes the reconstructed table. It loops over the +total_columns+
+  # and +total_columns+ that were assessed for the table and builds a two dimensional array of
   # empty strings.
   def initialize_table
     @total_rows.times do |row|
@@ -80,9 +80,9 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to include an 
-  # OrderedSet with type +crRows+. It loops over each attachment to identify the UUIDs that represent 
-  # table rows and puts them in the appropriate order. It then adds indices to +@row_indices+ to 
+  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to include an
+  # OrderedSet with type +crRows+. It loops over each attachment to identify the UUIDs that represent
+  # table rows and puts them in the appropriate order. It then adds indices to +@row_indices+ to
   # let later code look up where a given row falls in the +@reconstructed_table+.
   def parse_rows(object_entry)
     @total_rows = 0
@@ -100,9 +100,9 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to include an 
-  # OrderedSet with type +crColumns+. It loops over each attachment to identify the UUIDs that represent 
-  # table columns and puts them in the appropriate order. It then adds indices to +@column_indices+ to 
+  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to include an
+  # OrderedSet with type +crColumns+. It loops over each attachment to identify the UUIDs that represent
+  # table columns and puts them in the appropriate order. It then adds indices to +@column_indices+ to
   # let later code look up where a given column falls in the +@reconstructed_table+.
   def parse_columns(object_entry)
     @total_columns = 0
@@ -120,13 +120,13 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method does the hard work of building the rows and columns with cells in them. It 
+  # This method does the hard work of building the rows and columns with cells in them. It
   # expects a MergeableDataObjectEntry +object_entry+ which should have a type of +cellColumns+.
-  # It loops over each of its Dictionary elements, which represent each column. Inside of each Dictionary 
-  # element is a key that ends up pointing to a UUID index representing the column and a value 
-  # that points to a separate object which is a Dictionary of row UUIDs to cell (Note) objects. 
+  # It loops over each of its Dictionary elements, which represent each column. Inside of each Dictionary
+  # element is a key that ends up pointing to a UUID index representing the column and a value
+  # that points to a separate object which is a Dictionary of row UUIDs to cell (Note) objects.
   # This calls get_target_uuid_from_table_object on the first key to get th column's index and
-  # then does that for each of the rows it points to. With this information, it can look up 
+  # then does that for each of the rows it points to. With this information, it can look up
   # where in the +@reconstructed_table+ the Note it is pointing to goes.
   def parse_cell_columns(object_entry)
 
@@ -148,11 +148,11 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to be of type 
-  # +com.apple.notes.ICTable+, representing the actual table. It looks over each of the MapEntry 
-  # objects within to handle each as it needs to be, using the aforecreated fucntions. The +crTableColumnDirection+ 
-  # object isn't quite understood yet and is handled elsewhere. As this gets enough information, it initializes 
-  # the +reconstructed_table+ and flips the tabl's direction if the order changes. 
+  # This method takes a MergeableDataObjectEntry +object_entry+ that it expects to be of type
+  # +com.apple.notes.ICTable+, representing the actual table. It looks over each of the MapEntry
+  # objects within to handle each as it needs to be, using the aforecreated fucntions. The +crTableColumnDirection+
+  # object isn't quite understood yet and is handled elsewhere. As this gets enough information, it initializes
+  # the +reconstructed_table+ and flips the tabl's direction if the order changes.
   def parse_table(object_entry)
     if object_entry.custom_map and @type_items[object_entry.custom_map.type] == "com.apple.notes.ICTable"
 
@@ -179,7 +179,7 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
           # Actually parse through the values
           parse_cell_columns(need_to_parse_cell_columns)
           need_to_parse_cell_columns = false
-        end        
+        end
       end
 
       # We need to reverse the table if it is right to left
@@ -192,17 +192,17 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method rebuilds the embedded table. It extracts the gzipped data, gunzips it, and builds a 
-  # MergableDataProto from the result. It then loops over each of the key, type, and UUID items 
-  # in the proto to build an index for reference. Then it loops over all the objects in the proto 
-  # to do similar, as well as identifying the table's direction. Finally, it finds the root table 
+  # This method rebuilds the embedded table. It extracts the gzipped data, gunzips it, and builds a
+  # MergableDataProto from the result. It then loops over each of the key, type, and UUID items
+  # in the proto to build an index for reference. Then it loops over all the objects in the proto
+  # to do similar, as well as identifying the table's direction. Finally, it finds the root table
   # and calls parse_table on it.
   def rebuild_table
 
     gzipped_data = nil
 
-    # If this Table is password protected, fetch the mergeable data from the 
-    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it. 
+    # If this Table is password protected, fetch the mergeable data from the
+    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it.
     if @is_password_protected
       @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON, ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD " +
                         "FROM ZICCLOUDSYNCINGOBJECT " +
@@ -295,8 +295,8 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method generates the HTML necessary to display the table. 
-  # For display purposes, if a cell would be completely empty, it is 
+  # This method generates the HTML necessary to display the table.
+  # For display purposes, if a cell would be completely empty, it is
   # displayed as having one space in it.
   def generate_html
 
@@ -324,6 +324,10 @@ class AppleNotesEmbeddedTable < AppleNotesEmbeddedObject
     # Close the table
     html += "</table>\n";
     return html
+  end
+
+  def generate_markdown
+    generate_html
   end
 
 end

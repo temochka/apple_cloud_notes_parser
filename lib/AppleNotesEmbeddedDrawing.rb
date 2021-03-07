@@ -10,11 +10,11 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
                 :type,
                 :reference_location
 
-  ## 
-  # Creates a new AppleNotesEmbeddedDrawing object. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
-  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote, and 
-  # AppleBackup +backup+ from the parent AppleNote. Immediately sets the +filename+ and +filepath+ to point to were the media is stored. 
+  ##
+  # Creates a new AppleNotesEmbeddedDrawing object.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
+  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote, and
+  # AppleBackup +backup+ from the parent AppleNote. Immediately sets the +filename+ and +filepath+ to point to were the media is stored.
   # Finally, it attempts to copy the file to the output folder.
   def initialize(primary_key, uuid, uti, note, backup)
     # Set this folder's variables
@@ -25,11 +25,11 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
 
     # Find where on this computer that file is stored
     @backup_location = @backup.get_real_file_path(@filepath)
-    
+
     # Copy the file to our output directory if we can
-    @reference_location = @backup.back_up_file(@filepath, 
-                                               @filename, 
-                                               @backup_location, 
+    @reference_location = @backup.back_up_file(@filepath,
+                                               @filename,
+                                               @backup_location,
                                                @is_password_protected,
                                                @crypto_password,
                                                @crypto_salt,
@@ -40,15 +40,15 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
   end
 
   ##
-  # This function overrides the default AppleNotesEmbeddedObject add_cryptographic_settings 
-  # to include the fallback image settings from ZFALLBACKIMAGECRYPTOTAG and 
-  # ZFALLBACKIMAGECRYPTOINITIALIZATIONVECTOR for content on disk. 
+  # This function overrides the default AppleNotesEmbeddedObject add_cryptographic_settings
+  # to include the fallback image settings from ZFALLBACKIMAGECRYPTOTAG and
+  # ZFALLBACKIMAGECRYPTOINITIALIZATIONVECTOR for content on disk.
   def add_cryptographic_settings
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZCRYPTOINITIALIZATIONVECTOR, ZICCLOUDSYNCINGOBJECT.ZCRYPTOTAG, " +
-                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
-                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " + 
-                      "ZICCLOUDSYNCINGOBJECT.ZFALLBACKIMAGECRYPTOTAG, ZICCLOUDSYNCINGOBJECT.ZFALLBACKIMAGECRYPTOINITIALIZATIONVECTOR " + 
-                      "FROM ZICCLOUDSYNCINGOBJECT " + 
+                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
+                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " +
+                      "ZICCLOUDSYNCINGOBJECT.ZFALLBACKIMAGECRYPTOTAG, ZICCLOUDSYNCINGOBJECT.ZFALLBACKIMAGECRYPTOINITIALIZATIONVECTOR " +
+                      "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE Z_PK=?",
                       @primary_key) do |media_row|
       @crypto_iv = media_row["ZCRYPTOINITIALIZATIONVECTOR"]
@@ -65,7 +65,7 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method just returns a readable String for the object. 
+  # This method just returns a readable String for the object.
   # Adds to the AppleNotesEmbeddedObject.to_s by pointing to where the media is.
   def to_s
     return super + " with media in #{@backup_location}" if @backup_location
@@ -73,9 +73,9 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
   end
 
   ##
-  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+. 
-  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+ 
-  # and reading the ZICCOUDSYNCINGOBJECT.ZIDENTIFIER of the row identified by that number 
+  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+.
+  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+
+  # and reading the ZICCOUDSYNCINGOBJECT.ZIDENTIFIER of the row identified by that number
   # in the ZICCLOUDSYNCINGOBJECT.Z_PK field.
   def get_media_uuid
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZMEDIA " +
@@ -92,10 +92,10 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method returns the +filepath+ of this object. 
+  # This method returns the +filepath+ of this object.
   # This is computed based on the assumed default storage location.
   def get_media_filepath
-    "Accounts/#{@note.account.identifier}/FallbackImages/#{@filename}"
+    "FallbackImages/#{@filename}"
   end
 
   ##
@@ -110,6 +110,11 @@ class AppleNotesEmbeddedDrawing < AppleNotesEmbeddedObject
   def generate_html
     return @thumbnails.first.generate_html if @thumbnails.length > 0
     return "<img src='../#{@reference_location}' />"
+  end
+
+  def generate_markdown
+    return @thumbnails.first.generate_markdown if @thumbnails.length > 0
+    return "![](../../#{@reference_location})"
   end
 
 end

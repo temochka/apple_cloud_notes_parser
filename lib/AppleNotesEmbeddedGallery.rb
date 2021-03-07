@@ -7,10 +7,10 @@ require_relative 'AppleNotesEmbeddedThumbnail.rb'
 # in an AppleNote. This means you scanned a document in (via taking a picture).
 class AppleNotesEmbeddedGallery < AppleNotesEmbeddedObject
 
-  ## 
-  # Creates a new AppleNotesEmbeddedGallery object. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
-  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote, and 
+  ##
+  # Creates a new AppleNotesEmbeddedGallery object.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
+  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote, and
   # AppleBackup +backup+ from the parent AppleNote. Immediately finds the children picture objects and adds them.
   def initialize(primary_key, uuid, uti, note, backup)
     # Set this folder's variables
@@ -26,23 +26,23 @@ class AppleNotesEmbeddedGallery < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method just returns a readable String for the object. 
+  # This method just returns a readable String for the object.
   # Adds to the AppleNotesEmbeddedObject.to_s by pointing to where the media is.
   def to_s
     return super
   end
 
   ##
-  # Uses database calls to fetch the actual child objects' ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+. 
-  # This requires opening the protobuf inside of ZICCLOUDSYNCINGOBJECT.ZMERGEABLEDATA1 or 
-  # ZICCLOUDSYNCINGOBJECT.ZMERGEABLEDATA column (if older than iOS13) 
+  # Uses database calls to fetch the actual child objects' ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+.
+  # This requires opening the protobuf inside of ZICCLOUDSYNCINGOBJECT.ZMERGEABLEDATA1 or
+  # ZICCLOUDSYNCINGOBJECT.ZMERGEABLEDATA column (if older than iOS13)
   # and returning the referenced ZIDENTIFIER in that object.
   def add_gallery_children
 
     gzipped_data = nil
 
-    # If this Gallery is password protected, fetch the mergeable data from the 
-    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it. 
+    # If this Gallery is password protected, fetch the mergeable data from the
+    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it.
     if @is_password_protected
       @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON, ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD " +
                         "FROM ZICCLOUDSYNCINGOBJECT " +
@@ -104,12 +104,12 @@ class AppleNotesEmbeddedGallery < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method takes a String +uuid+ and looks up the necessary information in 
-  # ZICCLOUDSYNCINGOBJECTs to make a new child object of the appropriate type. 
+  # This method takes a String +uuid+ and looks up the necessary information in
+  # ZICCLOUDSYNCINGOBJECTs to make a new child object of the appropriate type.
   def create_child_from_uuid(uuid)
-    @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK, ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, " + 
-                      "ZICCLOUDSYNCINGOBJECT.ZTYPEUTI " + 
-                      "FROM ZICCLOUDSYNCINGOBJECT " + 
+    @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK, ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, " +
+                      "ZICCLOUDSYNCINGOBJECT.ZTYPEUTI " +
+                      "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE ZIDENTIFIER=?", uuid) do |row|
       tmp_child = AppleNotesEmbeddedPublicJpeg.new(row["Z_PK"],
                                                    row["ZIDENTIFIER"],
@@ -134,4 +134,13 @@ class AppleNotesEmbeddedGallery < AppleNotesEmbeddedObject
     return to_return
   end
 
+  def generate_markdown
+    to_return = ""
+
+    @child_objects.each do |child_object|
+      to_return += child_object.generate_markdown
+    end
+
+    return to_return
+  end
 end

@@ -2,7 +2,7 @@ require 'keyed_archive'
 require_relative 'AppleCloudKitShareParticipant'
 
 ##
-# This class represents a generic CloudKit Record. 
+# This class represents a generic CloudKit Record.
 class AppleCloudKitRecord
 
   attr_accessor :share_participants,
@@ -11,7 +11,7 @@ class AppleCloudKitRecord
 
   ##
   # Creates a new AppleCloudKitRecord.
-  # Requires nothing and initializes the share_participants. 
+  # Requires nothing and initializes the share_participants.
   def initialize()
     # Tracks the AppleCloudKitParticipants this is shared with
     @share_participants = Array.new()
@@ -22,8 +22,8 @@ class AppleCloudKitRecord
   end
 
   ##
-  # This method adds CloudKit Share data to an AppleCloudKitRecord. It requires 
-  # a binary String +cloudkit_data+ from the ZSERVERSHAREDATA column. 
+  # This method adds CloudKit Share data to an AppleCloudKitRecord. It requires
+  # a binary String +cloudkit_data+ from the ZSERVERSHAREDATA column.
   def add_cloudkit_sharing_data(cloudkit_data)
     keyed_archive = KeyedArchive.new(:data => cloudkit_data)
     unpacked_top = keyed_archive.unpacked_top()
@@ -33,7 +33,7 @@ class AppleCloudKitRecord
         # Pull out the relevant values
         participant_email = participant["UserIdentity"]["LookupInfo"]["EmailAddress"]
         participant_phone = participant["UserIdentity"]["LookupInfo"]["PhoneNumber"]
-        participant_record = participant["UserIdentity"]["UserRecordID"]["RecordName"]
+        participant_record = participant.dig("UserIdentity", "UserRecordID", "RecordName")
         participant_name_components = participant["UserIdentity"]["NameComponents"]["NS.nameComponentsPrivate"]
 
         # Initialize a new AppleCloudKitShareParticipant
@@ -58,8 +58,8 @@ class AppleCloudKitRecord
   end
 
   ##
-  # This method takes a the binary String +server_record_data+ which is stored 
-  # in ZSERVERRECORDDATA. Currently just pulls out the last modified device. 
+  # This method takes a the binary String +server_record_data+ which is stored
+  # in ZSERVERRECORDDATA. Currently just pulls out the last modified device.
   def add_cloudkit_server_record_data(server_record_data)
     @server_record_data = server_record_data
 

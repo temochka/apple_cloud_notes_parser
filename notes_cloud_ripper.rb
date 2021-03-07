@@ -21,7 +21,7 @@ output_directory = Pathname.new("./output")
 # Options Parser setup
 #
 
-option_parser = OptionParser.new 
+option_parser = OptionParser.new
 
 # Support iTunes sync directories
 option_parser.on("-i", "--itunes-dir DIRECTORY", "Root directory of an iTunes backup folder (i.e. where Manifest.db is). These normally have hashed filenames.") do |dir|
@@ -141,15 +141,32 @@ if apple_backup and apple_backup.valid? and apple_backup.note_stores.first.valid
   logger.debug("Creating HTML output folder: #{html_directory}")
   html_directory.mkpath
 
+  # Make a separate folder to hold the Markdown
+  md_directory = output_directory + "md"
+  logger.debug("Creating Markdown output folder: #{md_directory}")
+  md_directory.mkpath
+
   backup_number = 1
   apple_backup.note_stores.each do |note_store|
 
     logger.debug("Working on output for version #{note_store.version} note store #{note_store}")
 
-    # Write out the HTML summary
+    # # Write out the HTML summary
     logger.debug("Writing HTML for Note Store")
     File.open(html_directory + "all_notes_#{backup_number}.html", "wb") do |file|
       file.write(note_store.generate_html)
+    end
+
+    # Write out Markdown
+    logger.debug("Writing Markdown for Note Store")
+    note_store.folders.values.each do |folder|
+      backup_dir = md_directory + folder.name
+      backup_dir.mkpath
+      folder.notes.each do |note|
+        File.open(backup_dir + "#{note.creation_time.to_i} - #{note.title&.gsub(/[:\/\!]/, '_') || 'Untitled'}.md", 'w') do |file|
+          file << note.generate_markdown_text
+        end
+      end
     end
 
     # Create a CSV of the AppleNotesAccount objects
@@ -192,7 +209,7 @@ if apple_backup and apple_backup.valid? and apple_backup.note_stores.first.valid
       end
     end
 
-    # Close the note store for cleanliness  
+    # Close the note store for cleanliness
     logger.debug("Closing version #{note_store.version} note store #{note_store}")
     note_store.close
 

@@ -7,12 +7,12 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
 
   attr_accessor :reference_location
 
-  ## 
-  # Creates a new AppleNotesEmbeddedPublicJpeg object. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
-  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote, 
-  # AppleBackup +backup+ from the parent AppleNote, and AppleEmbeddedObject +parent+ (or nil). 
-  # Immediately sets the +filename+ and +filepath+ to point to were the media is stored. 
+  ##
+  # Creates a new AppleNotesEmbeddedPublicJpeg object.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
+  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, AppleNote +note+ object representing the parent AppleNote,
+  # AppleBackup +backup+ from the parent AppleNote, and AppleEmbeddedObject +parent+ (or nil).
+  # Immediately sets the +filename+ and +filepath+ to point to were the media is stored.
   # Finally, it attempts to copy the file to the output folder.
   def initialize(primary_key, uuid, uti, note, backup, parent)
     # Set this object's variables
@@ -26,11 +26,11 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
 
     # Find where on this computer that file is stored
     @backup_location = @backup.get_real_file_path(@filepath)
-  
+
     # Copy the file to our output directory if we can
-    @reference_location = @backup.back_up_file(@filepath, 
-                                               @filename, 
-                                               @backup_location, 
+    @reference_location = @backup.back_up_file(@filepath,
+                                               @filename,
+                                               @backup_location,
                                                @is_password_protected,
                                                @crypto_password,
                                                @crypto_salt,
@@ -42,19 +42,19 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
   end
 
   ##
-  # This function overrides the default AppleNotesEmbeddedObject add_cryptographic_settings 
-  # to use the media's settings. It also adds the ZASSETCRYPTOTAG and ZASSETCRYPTOINITIALIZATIONVECTOR 
-  # fields for the content on disk. 
+  # This function overrides the default AppleNotesEmbeddedObject add_cryptographic_settings
+  # to use the media's settings. It also adds the ZASSETCRYPTOTAG and ZASSETCRYPTOINITIALIZATIONVECTOR
+  # fields for the content on disk.
   def add_cryptographic_settings
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZMEDIA " +
                       "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER=?",
                       @uuid) do |row|
       @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZCRYPTOINITIALIZATIONVECTOR, ZICCLOUDSYNCINGOBJECT.ZCRYPTOTAG, " +
-                        "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
-                        "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " + 
-                        "ZICCLOUDSYNCINGOBJECT.ZASSETCRYPTOTAG, ZICCLOUDSYNCINGOBJECT.ZASSETCRYPTOINITIALIZATIONVECTOR " + 
-                        "FROM ZICCLOUDSYNCINGOBJECT " + 
+                        "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
+                        "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " +
+                        "ZICCLOUDSYNCINGOBJECT.ZASSETCRYPTOTAG, ZICCLOUDSYNCINGOBJECT.ZASSETCRYPTOINITIALIZATIONVECTOR " +
+                        "FROM ZICCLOUDSYNCINGOBJECT " +
                         "WHERE Z_PK=?",
                         row["ZMEDIA"]) do |media_row|
         @crypto_iv = media_row["ZCRYPTOINITIALIZATIONVECTOR"]
@@ -78,7 +78,7 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method just returns a readable String for the object. 
+  # This method just returns a readable String for the object.
   # Adds to the AppleNotesEmbeddedObject.to_s by pointing to where the media is.
   def to_s
     return super + " with media in #{@backup_location}" if @backup_location
@@ -86,9 +86,9 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
   end
 
   ##
-  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+. 
-  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+ 
-  # and reading the ZICCOUDSYNCINGOBJECT.ZIDENTIFIER of the row identified by that number 
+  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+.
+  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+
+  # and reading the ZICCOUDSYNCINGOBJECT.ZIDENTIFIER of the row identified by that number
   # in the ZICCLOUDSYNCINGOBJECT.Z_PK field.
   def get_media_uuid
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZMEDIA " +
@@ -105,24 +105,24 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method returns the +filepath+ of this object. 
+  # This method returns the +filepath+ of this object.
   # This is computed based on the assumed default storage location.
   def get_media_filepath
-    return "Accounts/#{@note.account.identifier}/Media/#{get_media_uuid}/#{get_media_uuid}" if @is_password_protected
-    return "Accounts/#{@note.account.identifier}/Media/#{get_media_uuid}/#{@filename}"
+    return "Media/#{get_media_uuid}/#{get_media_uuid}" if @is_password_protected
+    return "Media/#{get_media_uuid}/#{@filename}"
   end
 
   ##
-  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+. 
-  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+ 
-  # and reading the ZICCOUDSYNCINGOBJECT.ZFILENAME of the row identified by that number 
+  # Uses database calls to fetch the actual media object's ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER +uuid+.
+  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZMEDIA field on the entry with this object's +uuid+
+  # and reading the ZICCOUDSYNCINGOBJECT.ZFILENAME of the row identified by that number
   # in the ZICCLOUDSYNCINGOBJECT.Z_PK field.
   def get_media_filename
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZMEDIA " +
                       "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER=?",
                       @uuid) do |row|
-      @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZFILENAME, " + 
+      @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZFILENAME, " +
                         "ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON, " +
                         "ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " +
                         "ZICCLOUDSYNCINGOBJECT.ZCRYPTOINITIALIZATIONVECTOR, " +
@@ -183,6 +183,11 @@ class AppleNotesEmbeddedPublicJpeg < AppleNotesEmbeddedObject
   def generate_html
     return @thumbnails.first.generate_html if @thumbnails.length > 0
     return "<img src='../#{@reference_location}' />"
+  end
+
+  def generate_markdown
+    return @thumbnails.first.generate_markdown if @thumbnails.length > 0
+    return "![](../../#{@reference_location})"
   end
 
 end

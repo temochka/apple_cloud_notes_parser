@@ -3,7 +3,7 @@ require 'keyed_archive'
 
 ##
 # This class represents a public.url object embedded
-# in an AppleNote. This means you used another application to 'share' something that 
+# in an AppleNote. This means you used another application to 'share' something that
 # resolved to a URL, such as a website in Safari, or a place in Maps.
 class AppleNotesEmbeddedPublicURL < AppleNotesEmbeddedObject
 
@@ -12,10 +12,10 @@ class AppleNotesEmbeddedPublicURL < AppleNotesEmbeddedObject
                 :type,
                 :url
 
-  ## 
-  # Creates a new AppleNotesEmbeddedURL object. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
-  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, and an AppleNote +note+ object representing the parent AppleNote. 
+  ##
+  # Creates a new AppleNotesEmbeddedURL object.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
+  # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUTI, and an AppleNote +note+ object representing the parent AppleNote.
   # Immediately sets the URL variable to where this points at.
   def initialize(primary_key, uuid, uti, note)
     # Set this folder's variables
@@ -25,22 +25,22 @@ class AppleNotesEmbeddedPublicURL < AppleNotesEmbeddedObject
   end
 
   ##
-  # This method just returns a readable String for the object. 
+  # This method just returns a readable String for the object.
   # Adds to the AppleNotesEmbeddedObject.to_s by pointing to where the media is.
   def to_s
     return super + " pointing to #{@url}"
   end
 
   ##
-  # Uses database calls to fetch the object's ZICCLOUDSYNCINGOBJECT.ZURLSTRING +url+. 
-  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER field on the entry with this object's +uuid+ 
+  # Uses database calls to fetch the object's ZICCLOUDSYNCINGOBJECT.ZURLSTRING +url+.
+  # This requires taking the ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER field on the entry with this object's +uuid+
   # and reading the ZICCOUDSYNCINGOBJECT.ZURLSTRING of the row identified by that number.
   def get_referenced_url
     referenced_url = nil
 
-    
-    # If this URL is password protected, fetch the URL from the 
-    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it. 
+
+    # If this URL is password protected, fetch the URL from the
+    # ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON column and decrypt it.
     if @is_password_protected
       @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZENCRYPTEDVALUESJSON, ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD " +
                         "FROM ZICCLOUDSYNCINGOBJECT " +
@@ -86,6 +86,11 @@ class AppleNotesEmbeddedPublicURL < AppleNotesEmbeddedObject
   def generate_html
     return "<img src='../#{@thumbnails.first.reference_location}'/><a href='#{@url}'>#{@url}</a>" if @thumbnails.length > 0
     return "<a href='#{@url}'>#{@url}</a>"
+  end
+
+  def generate_markdown
+    return "![thumbnail](../../#{@thumbnails.first.reference_location}) [#{@url}](#{@url})" if @thumbnails.length > 0
+    return "[#{@url}](#{@url})"
   end
 
 end

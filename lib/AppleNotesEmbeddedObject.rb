@@ -15,8 +15,8 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
                 :parent
 
   ##
-  # Creates a new AppleNotesEmbeddedObject. 
-  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, 
+  # Creates a new AppleNotesEmbeddedObject.
+  # Expects an Integer +primary_key+ from ZICCLOUDSYNCINGOBJECT.Z_PK, String +uuid+ from ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER,
   # String +uti+ from ZICCLOUDSYNCINGOBJECT.ZTYPEUIT, and AppleNote +note+ object representing the parent AppleNote.
   def initialize(primary_key, uuid, uti, note)
     # Set this object's variables
@@ -45,7 +45,7 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
     end
 
     @logger.debug("Note #{@note.note_id}: Created a new Embedded Object of type #{@type}")
-  
+
     # Create an Array to hold Thumbnails and add them
     @thumbnails = Array.new
     search_and_add_thumbnails
@@ -55,13 +55,13 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
   end
 
   ##
-  # This function adds cryptographic settings to the AppleNoteEmbeddedObject. 
+  # This function adds cryptographic settings to the AppleNoteEmbeddedObject.
   def add_cryptographic_settings
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.ZCRYPTOINITIALIZATIONVECTOR, ZICCLOUDSYNCINGOBJECT.ZCRYPTOTAG, " +
-                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " + 
-                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " + 
-                      "ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD " + 
-                      "FROM ZICCLOUDSYNCINGOBJECT " + 
+                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOSALT, ZICCLOUDSYNCINGOBJECT.ZCRYPTOITERATIONCOUNT, " +
+                      "ZICCLOUDSYNCINGOBJECT.ZCRYPTOVERIFIER, ZICCLOUDSYNCINGOBJECT.ZCRYPTOWRAPPEDKEY, " +
+                      "ZICCLOUDSYNCINGOBJECT.ZUNAPPLIEDENCRYPTEDRECORD " +
+                      "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE Z_PK=?",
                       @primary_key) do |row|
 
@@ -76,7 +76,7 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
         @crypto_salt = ns_values[ns_keys.index("CryptoSalt")]
         @crypto_iterations = ns_values[ns_keys.index("CryptoIterationCount")]
         @crypto_key = ns_values[ns_keys.index("CryptoWrappedKey")]
-      else 
+      else
         @crypto_iv = row["ZCRYPTOINITIALIZATIONVECTOR"]
         @crypto_tag = row["ZCRYPTOTAG"]
         @crypto_salt = row["ZCRYPTOSALT"]
@@ -103,19 +103,19 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
   end
 
   ##
-  # This method queries ZICCLOUDSYNCINGOBJECT to find any thumbnails for 
+  # This method queries ZICCLOUDSYNCINGOBJECT to find any thumbnails for
   # this object. Each one it finds, it adds to the thumbnails Array.
   def search_and_add_thumbnails
     @thumbnails = Array.new
     @database.execute("SELECT ZICCLOUDSYNCINGOBJECT.Z_PK, ZICCLOUDSYNCINGOBJECT.ZIDENTIFIER, " +
-                      "ZICCLOUDSYNCINGOBJECT.ZHEIGHT, ZICCLOUDSYNCINGOBJECT.ZWIDTH " + 
-                      "FROM ZICCLOUDSYNCINGOBJECT " + 
+                      "ZICCLOUDSYNCINGOBJECT.ZHEIGHT, ZICCLOUDSYNCINGOBJECT.ZWIDTH " +
+                      "FROM ZICCLOUDSYNCINGOBJECT " +
                       "WHERE ZATTACHMENT=?",
                       @primary_key) do |row|
-      tmp_thumbnail = AppleNotesEmbeddedThumbnail.new(row["Z_PK"], 
-                                                      row["ZIDENTIFIER"], 
-                                                      "thumbnail", 
-                                                      @note, 
+      tmp_thumbnail = AppleNotesEmbeddedThumbnail.new(row["Z_PK"],
+                                                      row["ZIDENTIFIER"],
+                                                      "thumbnail",
+                                                      @note,
                                                       @backup,
                                                       row["ZHEIGHT"],
                                                       row["ZWIDTH"],
@@ -130,35 +130,35 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
 
   ##
   # This method just returns a readable String for the object.
-  # By default it just lists the +type+ and +uuid+. Subclasses 
+  # By default it just lists the +type+ and +uuid+. Subclasses
   # should override this.
   def to_s
     "Embedded Object #{@type}: #{@uuid}"
   end
 
   ##
-  # By default this returns its own +uuid+. 
+  # By default this returns its own +uuid+.
   # Subclasses will override this if they have other pointers to media objects.
   def get_media_uuid
     @uuid
   end
 
   ##
-  # By default this returns its own +filepath+. 
+  # By default this returns its own +filepath+.
   # Subclasses will override this if they have other pointers to media objects.
   def get_media_filepath
     @filepath
   end
 
   ##
-  # By default this returns its own +filename+. 
+  # By default this returns its own +filename+.
   # Subclasses will override this if they have other pointers to media objects.
   def get_media_filename
     @filename
   end
 
   ##
-  # This method returns either nil, if there is no parent object, 
+  # This method returns either nil, if there is no parent object,
   # or the parent object's primary_key.
   def get_parent_primary_key
     return nil if !@parent
@@ -168,10 +168,10 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
   ##
   # Class method to return an Array of the headers used on CSVs for this class
   def self.to_csv_headers
-    ["Object Primary Key", 
+    ["Object Primary Key",
      "Note ID",
      "Parent Object ID",
-     "Object UUID", 
+     "Object UUID",
      "Object Type",
      "Object Filename",
      "Object Filepath on Phone",
@@ -180,14 +180,14 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
 
   ##
   # This method returns an Array of the fields used in CSVs for this class
-  # Currently spits out the +primary_key+, AppleNote +note_id+, AppleNotesEmbeddedObject parent +primary_key+, 
-  # +uuid+, +type+, +filepath+, +filename+, and +backup_location+  on the computer. Also computes these for 
+  # Currently spits out the +primary_key+, AppleNote +note_id+, AppleNotesEmbeddedObject parent +primary_key+,
+  # +uuid+, +type+, +filepath+, +filename+, and +backup_location+  on the computer. Also computes these for
   # any children and thumbnails.
   def to_csv
-    to_return =[[@primary_key, 
+    to_return =[[@primary_key,
                    @note.note_id,
                    get_parent_primary_key,
-                   @uuid, 
+                   @uuid,
                    @type,
                    @filename,
                    @filepath,
@@ -212,4 +212,7 @@ class AppleNotesEmbeddedObject < AppleCloudKitRecord
     return self.to_s
   end
 
+  def generate_markdown
+    return self.to_s
+  end
 end
